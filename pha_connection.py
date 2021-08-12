@@ -8,6 +8,8 @@
 """
 import struct
 import threading
+import traceback
+import socket
 from time import sleep
 class connection_manager(threading.Thread):
     
@@ -91,6 +93,7 @@ class connection_manager(threading.Thread):
         if(self.state == 2):
             self.login_connection()
         
+        
     def status_connection(self):
         while True:
             data = self.read_fully()
@@ -130,5 +133,9 @@ class connection_manager(threading.Thread):
             sleep(1)
             self.do_response()
             self.register_event()
+        except socket.timeout:
+            pass
+        except:
+            self.logger.warning(traceback.format_exc())
         finally:
             self.conn.close()

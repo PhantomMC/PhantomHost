@@ -9,7 +9,6 @@
 from time import strftime, localtime
 import os
 from os import path
-from pha_yaml import yaml_manager
 
 def list_to_string(alist):
     output = ""
@@ -25,57 +24,45 @@ def list_to_string(alist):
         output = output + " " + item
         
     return output
-
-def generate_n_char(n,achar):
-    output = achar;
-    for i in range(n-1):
-        output = output+achar
-        
-    return output
         
 def write_time():
     return strftime("%y.%m.%d@%H:%M", localtime())
 
 
 class logger:
-    def __init__(self,version,config):
+    def __init__(self,isLogMsgs = False,isDebug = False):
         
         if not os.path.exists("log"):
             os.mkdir("log")
         
-        self.log_pings = config["Logging"]["log"]
-        self.store_users = config["Logging"]["storeUsers"]
-        self.is_debug = config["debug"]
+        self.isLogMsgs = isLogMsgs
+        self.isDebug = isDebug
         self.file_path = "log"
-        
-        if self.store_users:
-            default_yml = None
-            file_desti = "userList"
-            self.user_data_manager = yaml_manager(default_yml,file_desti)
-            self.user_data = self.user_data_manager.get_yml()
             
         
         self.create_new_log()
-        row1 = "----------------------\n"
-        row2 = "|   Phantom server   |\n"
-        row3 = "|   Version " + version + generate_n_char(9-len(version)," ")+"|\n"
-        row4 = "----------------------\n"
-        row5 = "[debug = " + str(self.is_debug) + ", style = " + str(config["Style"])+"]\n"
-        msg =  row1 + row2 + row3 + row4 + row5
-        print (msg)
-        self.write_to_file(msg)
         
     def info(self,*msg):
-        end_msg = write_time() + " [INFO]" + list_to_string(msg)
-        
-        print(end_msg)
-        self.write_to_file(end_msg)
+        end_msg = " [INFO]" + list_to_string(msg)
+        self.printMsg(end_msg)
     
     def debug(self,*msg):
-        if self.is_debug:
-            end_msg = write_time() +" [DEBUG]" + list_to_string(msg)
-            self.write_to_file(end_msg)
-            print(end_msg)
+        if self.isDebug:
+            end_msg = " [DEBUG]" + list_to_string(msg)
+            self.printMsg(end_msg)
+            
+    def error(self, *msg):
+        end_msg = " [ERROR]" + list_to_string(msg)
+        self.printMsg(end_msg)
+    
+    def warning(self, *msg):
+        end_msg = " [WARNING]" + list_to_string(msg)
+        self.printMsg(end_msg)
+        
+    def printMsg(self, msg):
+        msg = write_time() + msg;
+        self.write_to_file(msg)
+        print(msg)
         
     def register_user(self,client_port,client_address,client_username):
         msg = "from " + client_address + ":" + str(client_port)
@@ -100,7 +87,7 @@ class logger:
         os.rename(self.file_path+"/pings.log", self.file_path+"/pings"+ str(i) +".old")
         
     def write_to_file(self,msg):
-        if not self.log_pings:
+        if not self.isLogMsgs:
             return
         
         with open(self.file_path + "/pings.log","a") as file:
